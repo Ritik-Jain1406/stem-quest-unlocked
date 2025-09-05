@@ -33,6 +33,8 @@ export function useSupabaseData() {
       return;
     }
 
+    setIsLoading(true);
+
     const fetchProfile = async () => {
       try {
         const { data, error } = await supabase
@@ -277,7 +279,7 @@ export function useSupabaseData() {
     profile,
     progress: userProgressData,
     quests,
-    isLoading: isLoading || !isAuthenticated,
+    isLoading: isAuthenticated ? isLoading : false,
     completeQuest,
     completeLab,
   };
