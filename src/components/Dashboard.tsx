@@ -7,45 +7,32 @@ import { UserProfile } from './UserProfile';
 import { QuestCard } from './QuestCard';
 import { VirtualLab } from './VirtualLab';
 import { Leaderboard } from './Leaderboard';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { User, Quest, Lab } from '@/types/stem';
+import { User, Quest, Lab, UserProgress } from '@/types/stem';
 import { Search, Users, BookOpen, Trophy, Settings, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 
-export function Dashboard() {
-  const { user, progress, quests, isLoading, createUser, completeQuest, completeLab, resetProgress } = useLocalStorage();
+interface DashboardProps {
+  quests: Quest[];
+  userProgress: UserProgress;
+  onCompleteQuest: (questId: string) => Promise<void>;
+  onCompleteLab: (labId: string, questId: string, score?: number) => Promise<void>;
+}
+
+export function Dashboard({ quests, userProgress, onCompleteQuest, onCompleteLab }: DashboardProps) {
   const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null);
   const [selectedLab, setSelectedLab] = useState<Lab | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showUserForm, setShowUserForm] = useState(!user);
   const { toast } = useToast();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (showUserForm || !user) {
-    return <UserSetupForm onSubmit={(userData) => {
-      createUser(userData);
-      setShowUserForm(false);
-      toast({
-        title: "Welcome to STEM Quest!",
-        description: "Your learning adventure begins now!",
-      });
-    }} />;
-  }
 
   if (selectedLab) {
     return (
       <VirtualLab
         lab={selectedLab}
-        onComplete={(score) => {
-          completeLab(selectedLab.id, score);
+        onComplete={async (score) => {
+          if (selectedQuest) {
+            await onCompleteLab(selectedLab.id, selectedQuest.id, score);
+          }
           setSelectedLab(null);
           setSelectedQuest(null);
           toast({
@@ -80,83 +67,48 @@ export function Dashboard() {
               </h1>
               <p className="text-muted-foreground">Unlock the wonders of Science, Technology, Engineering & Math</p>
             </div>
-            <div className="flex items-center gap-4">
-              <Button variant="outline" size="sm" onClick={resetProgress}>
-                <Settings className="h-4 w-4 mr-2" />
-                Reset
-              </Button>
-            </div>
           </div>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
-            <UserProfile user={user} progress={progress!} />
-          </div>
-
           {/* Main Content */}
-          <div className="lg:col-span-3">
-            <Tabs defaultValue="quests" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="quests" className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  Quests
-                </TabsTrigger>
-                <TabsTrigger value="leaderboard" className="flex items-center gap-2">
-                  <Trophy className="h-4 w-4" />
-                  Leaderboard
-                </TabsTrigger>
-                <TabsTrigger value="community" className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Community
-                </TabsTrigger>
-              </TabsList>
 
-              <TabsContent value="quests" className="space-y-6">
-                {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search quests..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+          <div className="space-y-6">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search quests..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Quests Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {filteredQuests.map((quest) => {
+                const isCompleted = userProgress.questsCompleted.includes(quest.id);
+                const questWithCompletion = {
+                  ...quest,
+                  isCompleted,
+                  labs: quest.labs.map(lab => ({
+                    ...lab,
+                    isCompleted: userProgress.labsCompleted.includes(lab.id)
+                  }))
+                };
+                
+                return (
+                  <QuestCard
+                    key={quest.id}
+                    quest={questWithCompletion}
+                    onStart={() => setSelectedQuest(questWithCompletion)}
                   />
-                </div>
-
-                {/* Quests Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {filteredQuests.map((quest) => (
-                    <QuestCard
-                      key={quest.id}
-                      quest={quest}
-                      onStart={() => setSelectedQuest(quest)}
-                    />
-                  ))}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="leaderboard">
-                <Leaderboard currentUser={user} />
-              </TabsContent>
-
-              <TabsContent value="community">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Community Features</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">
-                      Community features like forums, study groups, and collaborative projects would be available here.
-                      Connect with fellow STEM enthusiasts and learn together!
-                    </p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
