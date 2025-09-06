@@ -415,73 +415,7 @@ export type Database = {
       }
     }
     Views: {
-      code_challenges_public: {
-        Row: {
-          created_at: string | null
-          id: string | null
-          lab_id: string | null
-          language: string | null
-          starter_code: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string | null
-          lab_id?: string | null
-          language?: string | null
-          starter_code?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string | null
-          lab_id?: string | null
-          language?: string | null
-          starter_code?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "code_challenges_lab_id_fkey"
-            columns: ["lab_id"]
-            isOneToOne: false
-            referencedRelation: "labs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      quiz_questions_public: {
-        Row: {
-          created_at: string | null
-          id: string | null
-          lab_id: string | null
-          options: string[] | null
-          order_index: number | null
-          question: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string | null
-          lab_id?: string | null
-          options?: string[] | null
-          order_index?: number | null
-          question?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string | null
-          lab_id?: string | null
-          options?: string[] | null
-          order_index?: number | null
-          question?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "quiz_questions_lab_id_fkey"
-            columns: ["lab_id"]
-            isOneToOne: false
-            referencedRelation: "labs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       calculate_level: {
@@ -491,6 +425,10 @@ export type Database = {
       update_user_xp: {
         Args: { user_uuid: string; xp_to_add: number }
         Returns: undefined
+      }
+      user_completed_quiz: {
+        Args: { lab_uuid: string; user_uuid: string }
+        Returns: boolean
       }
     }
     Enums: {

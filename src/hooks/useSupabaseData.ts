@@ -100,7 +100,12 @@ export function useSupabaseData() {
               instructions: lab.instructions,
               materials: lab.materials || [],
               steps: lab.steps || [],
-              questions: lab.quiz_questions || [],
+              questions: lab.quiz_questions?.map((q: any) => ({
+                ...q,
+                // Hide correct answers and explanations until quiz is completed
+                correct_answer: undefined,
+                explanation: undefined,
+              })) || [],
               simulation: lab.simulation_configs?.[0] ? {
                 type: lab.simulation_configs[0].simulation_type,
                 parameters: lab.simulation_configs[0].parameters,
@@ -108,8 +113,9 @@ export function useSupabaseData() {
               code: lab.code_challenges?.[0] ? {
                 language: lab.code_challenges[0].language,
                 starterCode: lab.code_challenges[0].starter_code,
-                expectedOutput: lab.code_challenges[0].expected_output,
-                testCases: lab.code_challenges[0].test_cases || [],
+                // Hide solutions until challenge is completed
+                expectedOutput: undefined,
+                testCases: [],
               } : undefined,
             },
             isCompleted: false,
