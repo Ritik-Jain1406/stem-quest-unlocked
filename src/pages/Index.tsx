@@ -8,6 +8,7 @@ import { Beaker, Users, Trophy, BookOpen, Play, User, LogOut, LogIn } from "luci
 import { Dashboard } from '@/components/Dashboard';
 import { UserProfile } from '@/components/UserProfile';
 import { Leaderboard } from '@/components/Leaderboard';
+import { Footer } from '@/components/Footer';
 import { useAuth } from '@/hooks/useAuth';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { toast } from 'sonner';
@@ -42,9 +43,12 @@ const Index = () => {
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <header className="flex items-center justify-between mb-12">
-            <div className="flex items-center gap-2">
-              <Beaker className="h-8 w-8 text-white" />
-              <h1 className="text-3xl font-bold text-white">STEM Adventures</h1>
+            <div className="flex items-center gap-3">
+              <img 
+                src="/lovable-uploads/aad96ff8-0233-413a-b3c3-417338d1ea29.png" 
+                alt="ZEINTH LEARN Logo" 
+                className="h-12 w-auto"
+              />
             </div>
             <Button 
               onClick={() => navigate('/auth')}
@@ -144,9 +148,12 @@ const Index = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <header className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-2">
-            <Beaker className="h-8 w-8 text-white" />
-            <h1 className="text-3xl font-bold text-white">STEM Adventures</h1>
+          <div className="flex items-center gap-3">
+            <img 
+              src="/lovable-uploads/aad96ff8-0233-413a-b3c3-417338d1ea29.png" 
+              alt="ZEINTH LEARN Logo" 
+              className="h-12 w-auto"
+            />
           </div>
           <div className="flex items-center gap-2">
             <span className="text-white/80">Welcome, {user.name}!</span>
@@ -240,6 +247,7 @@ const Index = () => {
             )}
           </div>
         </div>
+        <Footer />
       </div>
     </div>
   );
