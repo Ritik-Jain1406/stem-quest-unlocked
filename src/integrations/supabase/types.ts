@@ -415,7 +415,73 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      code_challenges_public: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          lab_id: string | null
+          language: string | null
+          starter_code: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          lab_id?: string | null
+          language?: string | null
+          starter_code?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          lab_id?: string | null
+          language?: string | null
+          starter_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "code_challenges_lab_id_fkey"
+            columns: ["lab_id"]
+            isOneToOne: false
+            referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_questions_public: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          lab_id: string | null
+          options: string[] | null
+          order_index: number | null
+          question: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          lab_id?: string | null
+          options?: string[] | null
+          order_index?: number | null
+          question?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          lab_id?: string | null
+          options?: string[] | null
+          order_index?: number | null
+          question?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_questions_lab_id_fkey"
+            columns: ["lab_id"]
+            isOneToOne: false
+            referencedRelation: "labs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       calculate_level: {
