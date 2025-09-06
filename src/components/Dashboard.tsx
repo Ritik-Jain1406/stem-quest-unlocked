@@ -7,8 +7,9 @@ import { UserProfile } from './UserProfile';
 import { QuestCard } from './QuestCard';
 import { VirtualLab } from './VirtualLab';
 import { Leaderboard } from './Leaderboard';
+import { GameHub } from './games/GameHub';
 import { User, Quest, Lab, UserProgress } from '@/types/stem';
-import { Search, Users, BookOpen, Trophy, Settings, CheckCircle } from 'lucide-react';
+import { Search, Users, BookOpen, Trophy, Settings, CheckCircle, Gamepad2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 
@@ -23,7 +24,14 @@ export function Dashboard({ quests, userProgress, onCompleteQuest, onCompleteLab
   const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null);
   const [selectedLab, setSelectedLab] = useState<Lab | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showGames, setShowGames] = useState(false);
   const { toast } = useToast();
+
+  if (showGames) {
+    return (
+      <GameHub onBack={() => setShowGames(false)} />
+    );
+  }
 
   if (selectedLab) {
     return (
@@ -63,9 +71,18 @@ export function Dashboard({ quests, userProgress, onCompleteQuest, onCompleteLab
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-engineering bg-clip-text text-transparent">
-                STEM Quest
+                ZEINTH LEARN
               </h1>
               <p className="text-muted-foreground">Unlock the wonders of Science, Technology, Engineering & Math</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <Button 
+                onClick={() => setShowGames(true)} 
+                variant="outline" 
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 border-0"
+              >
+                🎮 Fun Games
+              </Button>
             </div>
           </div>
         </div>

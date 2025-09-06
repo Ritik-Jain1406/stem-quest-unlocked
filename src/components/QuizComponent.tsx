@@ -19,6 +19,7 @@ export function QuizComponent({ questions, onComplete }: QuizComponentProps) {
   const [isFinished, setIsFinished] = useState(false);
 
   const handleAnswerSelect = (answerIndex: number) => {
+    if (showResult) return; // Prevent changing answer after showing result
     const newAnswers = [...selectedAnswers];
     newAnswers[currentQuestion] = answerIndex;
     setSelectedAnswers(newAnswers);
