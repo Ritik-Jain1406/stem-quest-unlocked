@@ -47,7 +47,7 @@ const Index = () => {
               <img 
                 src="/lovable-uploads/aad96ff8-0233-413a-b3c3-417338d1ea29.png" 
                 alt="ZEINTH LEARN Logo" 
-                className="h-12 w-auto"
+                className="h-20 w-auto"
               />
             </div>
             <Button 
@@ -152,7 +152,7 @@ const Index = () => {
             <img 
               src="/lovable-uploads/aad96ff8-0233-413a-b3c3-417338d1ea29.png" 
               alt="ZEINTH LEARN Logo" 
-              className="h-12 w-auto"
+              className="h-20 w-auto"
             />
           </div>
           <div className="flex items-center gap-2">
