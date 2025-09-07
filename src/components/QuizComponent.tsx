@@ -46,8 +46,26 @@ export function QuizComponent({ questions, onComplete }: QuizComponentProps) {
 
   const currentQ = questions[currentQuestion];
   const selectedAnswer = selectedAnswers[currentQuestion];
-  const isCorrect = selectedAnswer === currentQ.correctAnswer;
+  const isCorrect = currentQ && selectedAnswer === currentQ.correctAnswer;
   const progress = ((currentQuestion + 1) / questions.length) * 100;
+
+  // Return early if no questions available
+  if (!questions || questions.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-lg text-muted-foreground">No questions available</p>
+      </div>
+    );
+  }
+
+  // Return early if current question is not available
+  if (!currentQ) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-lg text-muted-foreground">Question not found</p>
+      </div>
+    );
+  }
 
   if (isFinished) {
     const correctAnswers = selectedAnswers.filter(
