@@ -196,6 +196,7 @@ export type Database = {
           last_active_date: string
           level: number
           name: string
+          role: string | null
           updated_at: string
           user_id: string
           xp: number
@@ -209,6 +210,7 @@ export type Database = {
           last_active_date?: string
           level?: number
           name: string
+          role?: string | null
           updated_at?: string
           user_id: string
           xp?: number
@@ -222,6 +224,7 @@ export type Database = {
           last_active_date?: string
           level?: number
           name?: string
+          role?: string | null
           updated_at?: string
           user_id?: string
           xp?: number
@@ -342,6 +345,104 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      student_quiz_attempts: {
+        Row: {
+          answers: Json
+          attempt_number: number
+          completed_at: string | null
+          created_at: string
+          id: string
+          is_completed: boolean
+          max_score: number
+          score: number | null
+          started_at: string
+          student_id: string
+          teacher_question_id: string
+          time_taken: number | null
+        }
+        Insert: {
+          answers?: Json
+          attempt_number?: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          max_score: number
+          score?: number | null
+          started_at?: string
+          student_id: string
+          teacher_question_id: string
+          time_taken?: number | null
+        }
+        Update: {
+          answers?: Json
+          attempt_number?: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          max_score?: number
+          score?: number | null
+          started_at?: string
+          student_id?: string
+          teacher_question_id?: string
+          time_taken?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_quiz_attempts_teacher_question_id_fkey"
+            columns: ["teacher_question_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_questions: {
+        Row: {
+          category: Database["public"]["Enums"]["stem_category"] | null
+          created_at: string
+          description: string | null
+          difficulty: Database["public"]["Enums"]["difficulty_level"] | null
+          id: string
+          is_active: boolean
+          max_attempts: number | null
+          questions: Json
+          teacher_id: string
+          time_limit: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["stem_category"] | null
+          created_at?: string
+          description?: string | null
+          difficulty?: Database["public"]["Enums"]["difficulty_level"] | null
+          id?: string
+          is_active?: boolean
+          max_attempts?: number | null
+          questions?: Json
+          teacher_id: string
+          time_limit?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["stem_category"] | null
+          created_at?: string
+          description?: string | null
+          difficulty?: Database["public"]["Enums"]["difficulty_level"] | null
+          id?: string
+          is_active?: boolean
+          max_attempts?: number | null
+          questions?: Json
+          teacher_id?: string
+          time_limit?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_badges: {
         Row: {
