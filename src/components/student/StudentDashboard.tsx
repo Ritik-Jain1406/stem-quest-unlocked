@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Play, Trophy, Clock, BookOpen, Target } from 'lucide-react';
+import { Play, Trophy, Clock, BookOpen, Target, Gamepad2, Microscope } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { GameHub } from '../games/GameHub';
+import { VirtualLab } from '../VirtualLab';
 
 interface AvailableQuiz {
   id: string;
@@ -32,6 +34,7 @@ interface CompletedQuiz {
 export function StudentDashboard() {
   const { t } = useTranslation();
   const [selectedQuiz, setSelectedQuiz] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('overview');
 
   // Mock data - replace with actual data from Supabase
   const availableQuizzes: AvailableQuiz[] = [
@@ -126,11 +129,13 @@ export function StudentDashboard() {
         </p>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="available">{t('availableQuizes')}</TabsTrigger>
-          <TabsTrigger value="completed">{t('completedQuizes')}</TabsTrigger>
+          <TabsTrigger value="available">Quizzes</TabsTrigger>
+          <TabsTrigger value="games">Games</TabsTrigger>
+          <TabsTrigger value="labs">Virtual Labs</TabsTrigger>
+          <TabsTrigger value="completed">Progress</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -173,26 +178,59 @@ export function StudentDashboard() {
             </Card>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {completedQuizzes.slice(0, 3).map((quiz) => (
-                <div key={quiz.id} className="flex items-center justify-between py-2">
-                  <div>
-                    <div className="font-medium">{quiz.title}</div>
-                    <div className="text-sm text-muted-foreground">
-                      Completed on {quiz.completedAt}
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button 
+                  onClick={() => setActiveTab('available')} 
+                  className="w-full justify-start"
+                >
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  Browse Quizzes
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setActiveTab('games')}
+                  className="w-full justify-start"
+                >
+                  <Gamepad2 className="mr-2 h-4 w-4" />
+                  Educational Games
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setActiveTab('labs')}
+                  className="w-full justify-start"
+                >
+                  <Microscope className="mr-2 h-4 w-4" />
+                  Virtual Labs
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {completedQuizzes.slice(0, 3).map((quiz) => (
+                  <div key={quiz.id} className="flex items-center justify-between py-2">
+                    <div>
+                      <div className="font-medium">{quiz.title}</div>
+                      <div className="text-sm text-muted-foreground">
+                        Completed on {quiz.completedAt}
+                      </div>
                     </div>
+                    <Badge variant={quiz.score >= 80 ? "default" : "secondary"}>
+                      {quiz.score}%
+                    </Badge>
                   </div>
-                  <Badge variant={quiz.score >= 80 ? "default" : "secondary"}>
-                    {quiz.score}%
-                  </Badge>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="available" className="space-y-4">
@@ -239,6 +277,14 @@ export function StudentDashboard() {
               </CardContent>
             </Card>
           ))}
+        </TabsContent>
+
+        <TabsContent value="games">
+          <GameHub />
+        </TabsContent>
+
+        <TabsContent value="labs">
+          <VirtualLab />
         </TabsContent>
 
         <TabsContent value="completed" className="space-y-4">

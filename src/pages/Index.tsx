@@ -21,8 +21,8 @@ const Index = () => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'settings'>('dashboard');
   
   const {
-    userData,
-    userProgressData,
+    user: userData,
+    progress: userProgressData,
     quests,
     isLoading: dataLoading,
     completeQuest,
