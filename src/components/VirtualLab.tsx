@@ -93,7 +93,13 @@ print(f"Area of circle with radius {radius} is {area:.2f}")`,
   }
 ];
 
-export function VirtualLab() {
+interface VirtualLabProps {
+  lab?: any;
+  onComplete?: (score: number) => void;
+  onBack?: () => void;
+}
+
+export function VirtualLab({ lab, onComplete, onBack }: VirtualLabProps) {
   const { t } = useTranslation();
   const [selectedExperiment, setSelectedExperiment] = useState<Experiment | null>(null);
   const [activeTab, setActiveTab] = useState('physics');

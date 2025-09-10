@@ -19,7 +19,11 @@ interface StudentProgress {
   }[];
 }
 
-export function StudentProgress() {
+interface StudentProgressProps {
+  onBack?: () => void;
+}
+
+export function StudentProgress({ onBack }: StudentProgressProps) {
   const { t } = useTranslation();
 
   // Mock data - replace with actual data from Supabase

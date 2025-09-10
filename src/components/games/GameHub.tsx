@@ -52,7 +52,11 @@ const games: Game[] = [
   }
 ];
 
-export function GameHub() {
+interface GameHubProps {
+  onBack?: () => void;
+}
+
+export function GameHub({ onBack }: GameHubProps) {
   const { t } = useTranslation();
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
 
@@ -88,7 +92,10 @@ export function GameHub() {
               </CardTitle>
               <Button 
                 variant="outline" 
-                onClick={() => setSelectedGame(null)}
+                onClick={() => {
+                  setSelectedGame(null);
+                  onBack?.();
+                }}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Games
