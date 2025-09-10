@@ -30,14 +30,38 @@ export function ZenithApp() {
         .from('profiles')
         .select('role, name')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching profile:', error);
         return;
       }
 
-      setUserProfile(data);
+      if (!data) {
+        console.log('No profile found, creating default student profile');
+        // Create a default profile if none exists
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: user.id,
+            name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+            email: user.email,
+            role: 'student'
+          });
+
+        if (!insertError) {
+          setUserProfile({ role: 'student', name: user.user_metadata?.name || 'Student' });
+        }
+        return;
+      }
+
+      // Type-safe assignment with proper casting
+      const userProfile: UserProfile = {
+        role: data.role as 'student' | 'teacher' | 'admin',
+        name: data.name
+      };
+
+      setUserProfile(userProfile);
     } catch (err) {
       console.error('Profile fetch error:', err);
     } finally {
