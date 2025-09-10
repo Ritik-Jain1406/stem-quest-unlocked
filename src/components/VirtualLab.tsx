@@ -260,65 +260,230 @@ export function VirtualLab({ onBack }: VirtualLabProps) {
   const InteractiveSimulation = ({ labId }: { labId: string }) => {
     const [isRunning, setIsRunning] = useState(false);
     const [measurements, setMeasurements] = useState<string[]>([]);
+    const [simulationProgress, setSimulationProgress] = useState(0);
 
     const runSimulation = () => {
       setIsRunning(true);
+      setSimulationProgress(0);
       
-      // Simulate lab experiment
-      setTimeout(() => {
-        const measurement = Math.random() * 10 + 5; // Random measurement
-        setMeasurements(prev => [...prev, `${measurement.toFixed(2)} units`]);
-        setIsRunning(false);
-        
-        toast({
-          title: "Measurement Recorded",
-          description: `Value: ${measurement.toFixed(2)} units`,
+      // Simulate realistic lab experiment with proper animation
+      const interval = setInterval(() => {
+        setSimulationProgress(prev => {
+          const newProgress = prev + 2;
+          if (newProgress >= 100) {
+            clearInterval(interval);
+            setIsRunning(false);
+            recordMeasurement();
+            return 100;
+          }
+          return newProgress;
         });
-      }, 2000);
+      }, 100);
+    };
+
+    const recordMeasurement = () => {
+      const measurement = generateMeasurement(labId);
+      setMeasurements(prev => [...prev, measurement]);
+      
+      toast({
+        title: "Measurement Recorded",
+        description: measurement,
+      });
+    };
+
+    const generateMeasurement = (labId: string) => {
+      switch (labId) {
+        case 'titration':
+          return `pH: ${(7 + Math.random() * 2).toFixed(2)} → ${(3 + Math.random()).toFixed(2)} (Neutralization point reached)`;
+        case 'pendulum':
+          return `Period: ${(2.0 + Math.random() * 0.3).toFixed(2)} seconds (Length: 1.0m)`;
+        case 'cell':
+          return `Cell count: ${Math.floor(150 + Math.random() * 50)} cells/mL (Viability: ${(95 + Math.random() * 5).toFixed(1)}%)`;
+        case 'optics':
+          return `Focal length: ${(15.0 + Math.random() * 5).toFixed(1)} cm (Lens power: ${(6.7 + Math.random()).toFixed(1)} D)`;
+        case 'reactions':
+          return `Reaction rate: ${(0.5 + Math.random() * 0.8).toFixed(3)} mol/L·s (Temperature: ${(25 + Math.random() * 10).toFixed(1)}°C)`;
+        case 'genetics':
+          return `Genotype ratio: ${Math.floor(1 + Math.random() * 3)}:${Math.floor(1 + Math.random() * 3)} (Expected: 3:1)`;
+        case 'algorithms':
+          return `Comparisons: ${Math.floor(15 + Math.random() * 20)} (Time complexity: O(n²))`;
+        case 'data-structures':
+          return `Tree height: ${Math.floor(4 + Math.random() * 3)} levels (Balance factor: ${(Math.random() * 2 - 1).toFixed(2)})`;
+        default:
+          return `Measurement: ${(Math.random() * 100).toFixed(2)} units`;
+      }
+    };
+
+    const getSimulationDisplay = (labId: string) => {
+      switch (labId) {
+        case 'titration':
+          return (
+            <div className="flex items-center justify-center space-x-8">
+              <div className="relative">
+                <div className="w-4 h-32 bg-gray-200 rounded border-2 border-gray-400">
+                  <div 
+                    className="w-full bg-blue-500 rounded transition-all duration-500 ease-out"
+                    style={{ height: `${100 - simulationProgress}%` }}
+                  ></div>
+                </div>
+                <span className="text-xs mt-2 block text-center">Burette</span>
+              </div>
+              <div className="text-4xl animate-bounce">💧</div>
+              <div className="relative">
+                <div 
+                  className="w-20 h-20 rounded-full border-4 border-gray-400 transition-colors duration-1000"
+                  style={{ 
+                    backgroundColor: isRunning 
+                      ? `hsl(${320 - simulationProgress * 2}, 70%, 60%)` 
+                      : '#ec4899' 
+                  }}
+                ></div>
+                <span className="text-xs mt-2 block text-center">Sample</span>
+              </div>
+            </div>
+          );
+        case 'pendulum':
+          return (
+            <div className="relative h-40 flex justify-center">
+              <div className="absolute top-0 w-1 h-1 bg-gray-800 rounded-full"></div>
+              <div 
+                className="absolute top-1 w-0.5 h-24 bg-gray-600 origin-top transition-transform duration-1000 ease-in-out"
+                style={{ 
+                  transform: isRunning 
+                    ? `rotate(${Math.sin(simulationProgress / 10) * 30}deg)` 
+                    : 'rotate(15deg)' 
+                }}
+              >
+                <div className="absolute -bottom-2 -left-2 w-4 h-4 bg-yellow-500 rounded-full border-2 border-yellow-600"></div>
+              </div>
+              <div className="absolute bottom-0 text-xs text-center">
+                <span>θ = {isRunning ? Math.abs(Math.sin(simulationProgress / 10) * 15).toFixed(1) : 15}°</span>
+              </div>
+            </div>
+          );
+        case 'cell':
+          return (
+            <div className="relative">
+              <div className="w-32 h-32 border-4 border-purple-400 rounded-full mx-auto relative overflow-hidden">
+                <div className="absolute inset-4 bg-purple-200 rounded-full"></div>
+                <div 
+                  className="absolute top-6 left-6 w-8 h-8 bg-purple-600 rounded-full transition-all duration-500"
+                  style={{ 
+                    transform: isRunning ? 'scale(1.2)' : 'scale(1)',
+                    opacity: isRunning ? 0.8 : 1 
+                  }}
+                ></div>
+                <div 
+                  className="absolute top-10 right-8 w-3 h-3 bg-red-500 rounded-full transition-all duration-700"
+                  style={{ 
+                    transform: isRunning ? 'translate(5px, -3px) scale(1.1)' : 'translate(0, 0) scale(1)' 
+                  }}
+                ></div>
+                <div 
+                  className="absolute bottom-8 left-10 w-3 h-3 bg-red-500 rounded-full transition-all duration-900"
+                  style={{ 
+                    transform: isRunning ? 'translate(-3px, 5px) scale(1.1)' : 'translate(0, 0) scale(1)' 
+                  }}
+                ></div>
+              </div>
+              <div className="text-center mt-2 text-xs">
+                <span>🔬 Magnification: 400x</span>
+              </div>
+            </div>
+          );
+        case 'algorithms':
+          return (
+            <div className="space-y-4">
+              <div className="flex justify-center space-x-2">
+                {[64, 34, 25, 12, 22, 11, 90].map((value, index) => (
+                  <div key={index} className="flex flex-col items-center">
+                    <div 
+                      className="bg-blue-500 border-2 border-blue-600 transition-all duration-500"
+                      style={{ 
+                        width: '24px',
+                        height: `${value}px`,
+                        backgroundColor: simulationProgress > 50 && value <= 34 ? '#10b981' : '#3b82f6'
+                      }}
+                    ></div>
+                    <span className="text-xs mt-1">{value}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="text-center text-xs">
+                <span>{isRunning ? 'Sorting...' : 'Array elements'}</span>
+              </div>
+            </div>
+          );
+        default:
+          return (
+            <div className="text-center space-y-4">
+              <div className="w-24 h-24 mx-auto bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full flex items-center justify-center">
+                <div 
+                  className="w-16 h-16 bg-primary rounded-full transition-transform duration-1000"
+                  style={{ 
+                    transform: isRunning ? 'scale(1.2) rotate(180deg)' : 'scale(1) rotate(0deg)' 
+                  }}
+                ></div>
+              </div>
+              <p className="text-sm text-muted-foreground">Generic simulation running...</p>
+            </div>
+          );
+      }
     };
 
     return (
-      <div className="space-y-4">
-        <div className="bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg p-6 border-2 border-dashed border-primary/20">
-          <div className="text-center space-y-4">
-            <div className="w-24 h-24 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-              <FlaskConical className="h-12 w-12 text-primary" />
+      <div className="space-y-6">
+        <div className="bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg p-8 border-2 border-dashed border-primary/20">
+          <div className="space-y-6">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold mb-4">Interactive Lab Environment</h3>
+              {getSimulationDisplay(selectedLab)}
             </div>
-            <h3 className="text-lg font-semibold">Interactive Lab Environment</h3>
-            <p className="text-muted-foreground">
-              Click 'Run Simulation' to begin the experiment
-            </p>
-            <Button 
-              onClick={runSimulation} 
-              disabled={isRunning}
-              className="w-full"
-            >
-              {isRunning ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Running...
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4 mr-2" />
-                  Run Simulation
-                </>
-              )}
-            </Button>
+
+            {isRunning && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Experiment Progress</span>
+                  <span>{Math.round(simulationProgress)}%</span>
+                </div>
+                <Progress value={simulationProgress} className="h-3" />
+              </div>
+            )}
+
+            <div className="text-center">
+              <Button 
+                onClick={runSimulation} 
+                disabled={isRunning}
+                className="w-full max-w-xs"
+              >
+                {isRunning ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Running Experiment...
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 mr-2" />
+                    Run Experiment
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
 
         {measurements.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Measurements</CardTitle>
+              <CardTitle className="text-sm">Experimental Results</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {measurements.map((measurement, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm">
+                  <div key={index} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                     <Badge variant="outline">{index + 1}</Badge>
-                    <span>{measurement}</span>
+                    <span className="text-sm flex-1">{measurement}</span>
+                    <CheckCircle className="h-4 w-4 text-green-500" />
                   </div>
                 ))}
               </div>

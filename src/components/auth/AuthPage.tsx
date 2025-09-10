@@ -169,55 +169,65 @@ export function AuthPage() {
     setError('');
 
     try {
-      // Create a demo account with unique credentials
-      const demoTimestamp = Date.now();
-      const demoEmail = `demo_${demoTimestamp}@zenithlearn.demo`;
-      const demoPassword = 'DemoUser123!';
+      // Use a fixed demo account that we can reuse
+      const demoEmail = 'demo@zenithlearn.app';
+      const demoPassword = 'DemoPassword123!';
       
-      const { data, error } = await supabase.auth.signUp({
+      // Try to sign in first (in case demo account already exists)
+      let { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: demoEmail,
         password: demoPassword,
-        options: {
-          data: {
-            name: 'Demo Student',
-            role: 'student'
-          }
-        }
       });
 
-      if (error) throw error;
-
-      if (data.user) {
-        // Create profile for demo user
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: data.user.id,
-            name: 'Demo Student',
-            email: demoEmail,
-            role: 'student',
-            xp: 500,
-            level: 3,
-            daily_streak: 5
-          });
-
-        if (profileError) {
-          console.error('Demo profile creation error:', profileError);
-        }
-
-        // Auto-sign in the demo user
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+      // If sign in fails, create the demo account
+      if (signInError) {
+        const { data, error } = await supabase.auth.signUp({
           email: demoEmail,
           password: demoPassword,
+          options: {
+            data: {
+              name: 'Demo Student',
+              role: 'student'
+            }
+          }
         });
 
-        if (signInError) throw signInError;
+        if (error) throw error;
 
-        toast({
-          title: "🎮 Demo Access Granted!",
-          description: "Exploring ZENITH LEARN as Demo Student",
-        });
+        if (data.user) {
+          // Create profile for demo user
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+              user_id: data.user.id,
+              name: 'Demo Student',
+              email: demoEmail,
+              role: 'student',
+              xp: 500,
+              level: 3,
+              daily_streak: 5
+            }, {
+              onConflict: 'user_id'
+            });
+
+          if (profileError) {
+            console.error('Demo profile creation error:', profileError);
+          }
+
+          // Auto-sign in the demo user
+          const { error: signInError2 } = await supabase.auth.signInWithPassword({
+            email: demoEmail,
+            password: demoPassword,
+          });
+
+          if (signInError2) throw signInError2;
+        }
       }
+
+      toast({
+        title: "🎮 Demo Access Granted!",
+        description: "Exploring ZENITH LEARN as Demo Student",
+      });
     } catch (err: any) {
       setError(err.message || 'Demo login failed');
       toast({

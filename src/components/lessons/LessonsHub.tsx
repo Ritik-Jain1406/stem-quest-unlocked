@@ -173,7 +173,7 @@ export function LessonsHub({ onBack }: LessonsHubProps) {
 
   if (selectedLesson) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 animate-fade-in">
         <div className="container mx-auto px-6 py-8">
           <Button variant="outline" onClick={() => setSelectedLesson(null)} className="mb-6">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -212,15 +212,36 @@ export function LessonsHub({ onBack }: LessonsHubProps) {
                     </div>
                   )}
                   
-                  {/* Lesson Content Placeholder */}
-                  <div className="bg-muted/30 rounded-lg p-8 text-center">
-                    <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Interactive Lesson Content</h3>
-                    <p className="text-muted-foreground mb-4">
-                      This would contain the actual lesson content with interactive elements, videos, and exercises.
+                  {/* Interactive Lesson Content */}
+                  <div className="bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg p-8 text-center border-2 border-dashed border-primary/20">
+                    <BookOpen className="h-16 w-16 text-primary mx-auto mb-4 animate-pulse" />
+                    <h3 className="text-xl font-semibold mb-4">Interactive Lesson Content</h3>
+                    <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                      This lesson includes interactive diagrams, animations, practice problems, and real-world applications of {selectedLesson.subject}.
                     </p>
-                    <Button>
-                      <PlayCircle className="h-4 w-4 mr-2" />
+                    
+                    {/* Sample lesson content */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      <div className="p-4 bg-white/50 rounded-lg border">
+                        <h4 className="font-medium mb-2">📖 Theory</h4>
+                        <p className="text-sm text-muted-foreground">Interactive explanations with diagrams</p>
+                      </div>
+                      <div className="p-4 bg-white/50 rounded-lg border">
+                        <h4 className="font-medium mb-2">🧪 Practice</h4>
+                        <p className="text-sm text-muted-foreground">Hands-on exercises and simulations</p>
+                      </div>
+                      <div className="p-4 bg-white/50 rounded-lg border">
+                        <h4 className="font-medium mb-2">📊 Assessment</h4>
+                        <p className="text-sm text-muted-foreground">Quiz questions and feedback</p>
+                      </div>
+                      <div className="p-4 bg-white/50 rounded-lg border">
+                        <h4 className="font-medium mb-2">🎯 Application</h4>
+                        <p className="text-sm text-muted-foreground">Real-world examples and cases</p>
+                      </div>
+                    </div>
+                    
+                    <Button size="lg" className="animate-pulse">
+                      <PlayCircle className="h-5 w-5 mr-2" />
                       {selectedLesson.progress > 0 ? 'Continue Learning' : 'Start Lesson'}
                     </Button>
                   </div>
@@ -276,7 +297,7 @@ export function LessonsHub({ onBack }: LessonsHubProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 animate-fade-in">
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-6 py-4">
@@ -302,7 +323,7 @@ export function LessonsHub({ onBack }: LessonsHubProps) {
 
       <div className="container mx-auto px-6 py-8">
         {/* Filters */}
-        <Card className="mb-8">
+        <Card className="mb-8 animate-scale-in">
           <CardContent className="p-6">
             <div className="space-y-4">
               {/* Search */}
@@ -357,10 +378,11 @@ export function LessonsHub({ onBack }: LessonsHubProps) {
 
         {/* Lessons Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredLessons.map((lesson) => (
+          {filteredLessons.map((lesson, index) => (
             <Card 
               key={lesson.id} 
-              className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105 group"
+              className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105 group animate-slide-in-right"
+              style={{ animationDelay: `${index * 0.1}s` }}
               onClick={() => setSelectedLesson(lesson)}
             >
               <CardHeader className="pb-3">
@@ -440,7 +462,7 @@ export function LessonsHub({ onBack }: LessonsHubProps) {
         </div>
         
         {filteredLessons.length === 0 && (
-          <Card className="p-12 text-center">
+          <Card className="p-12 text-center animate-fade-in">
             <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">No lessons found</h3>
             <p className="text-muted-foreground">
