@@ -83,7 +83,7 @@ export function AuthPage() {
 
       if (error) throw error;
 
-      // Create profile immediately after signup
+      // Create profile immediately after signup with proper defaults
       if (data.user) {
         const { error: profileError } = await supabase
           .from('profiles')
@@ -91,7 +91,10 @@ export function AuthPage() {
             user_id: data.user.id,
             name: signUpData.name,
             email: signUpData.email,
-            role: signUpData.role
+            role: signUpData.role,
+            xp: 0,
+            level: 1,
+            daily_streak: 0
           });
 
         if (profileError) {
@@ -125,6 +128,65 @@ export function AuthPage() {
       if (error) throw error;
     } catch (err: any) {
       setError(err.message || 'Google sign in failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      // Create a demo account with temporary credentials
+      const demoEmail = `demo_${Date.now()}@zenithlearn.demo`;
+      const demoPassword = 'demo123456';
+      
+      const { data, error } = await supabase.auth.signUp({
+        email: demoEmail,
+        password: demoPassword,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            name: 'Demo User',
+            role: 'student'
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      // Create profile for demo user
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: data.user.id,
+            name: 'Demo User',
+            email: demoEmail,
+            role: 'student',
+            xp: 0,
+            level: 1,
+            daily_streak: 0
+          });
+
+        if (profileError) {
+          console.error('Demo profile creation error:', profileError);
+        }
+      }
+
+      // Auto-sign in the demo user
+      await supabase.auth.signInWithPassword({
+        email: demoEmail,
+        password: demoPassword,
+      });
+
+      toast({
+        title: "Demo Access Granted!",
+        description: "Exploring ZENITH LEARN as a demo user.",
+      });
+    } catch (err: any) {
+      setError(err.message || 'Demo login failed');
     } finally {
       setLoading(false);
     }
@@ -348,8 +410,14 @@ export function AuthPage() {
                 <p className="text-sm text-muted-foreground">
                   Explore demo lessons and labs as a visitor
                 </p>
-                <Button variant="ghost" size="sm" className="text-primary">
-                  Access Demo →
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-primary hover:bg-primary/10"
+                  onClick={handleDemoLogin}
+                  disabled={loading}
+                >
+                  {loading ? 'Loading Demo...' : 'Access Demo →'}
                 </Button>
               </div>
             </div>

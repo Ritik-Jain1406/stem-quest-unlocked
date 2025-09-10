@@ -1,287 +1,570 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { PlayCircle, Beaker, Microscope, Cpu, Calculator, Lightbulb } from 'lucide-react';
-import { useTranslation } from '@/hooks/useTranslation';
-
-interface Experiment {
-  id: string;
-  title: string;
-  subject: 'physics' | 'chemistry' | 'biology' | 'computer';
-  grade: string;
-  description: string;
-  materials: string[];
-  steps: string[];
-  code?: string;
-  expectedResult: string;
-}
-
-const experiments: Experiment[] = [
-  {
-    id: '1',
-    title: 'Simple Pendulum Motion',
-    subject: 'physics',
-    grade: 'Class 9-10',
-    description: 'Study the motion of a simple pendulum and calculate its time period.',
-    materials: ['String', 'Bob', 'Scale', 'Stopwatch'],
-    steps: [
-      'Set up the pendulum with a 1-meter string',
-      'Release the bob from a 15-degree angle',
-      'Measure time for 10 oscillations',
-      'Calculate the time period using T = total time / 10',
-      'Compare with theoretical value T = 2π√(l/g)'
-    ],
-    expectedResult: 'Time period ≈ 2 seconds for 1-meter pendulum'
-  },
-  {
-    id: '2',
-    title: 'Acid-Base Reaction',
-    subject: 'chemistry',
-    grade: 'Class 8-9',
-    description: 'Observe the neutralization reaction between HCl and NaOH.',
-    materials: ['HCl solution', 'NaOH solution', 'Phenolphthalein', 'Beaker'],
-    steps: [
-      'Add 2-3 drops of phenolphthalein to NaOH solution',
-      'Slowly add HCl drop by drop',
-      'Observe color change from pink to colorless',
-      'Note the point of neutralization'
-    ],
-    expectedResult: 'Pink color disappears at neutralization point'
-  },
-  {
-    id: '3',
-    title: 'Cell Structure Observation',
-    subject: 'biology',
-    grade: 'Class 7-8',
-    description: 'Observe plant and animal cells under microscope.',
-    materials: ['Microscope', 'Onion peel', 'Cheek cells', 'Iodine', 'Methylene blue'],
-    steps: [
-      'Prepare onion peel slide with iodine stain',
-      'Observe under 10x and 40x magnification',
-      'Prepare cheek cell slide with methylene blue',
-      'Compare plant and animal cell structures'
-    ],
-    expectedResult: 'Plant cells show cell wall, animal cells show flexible membrane'
-  },
-  {
-    id: '4',
-    title: 'Python Functions',
-    subject: 'computer',
-    grade: 'Class 11-12',
-    description: 'Learn to create and use functions in Python.',
-    materials: ['Computer', 'Python IDE'],
-    steps: [
-      'Define a function to calculate area of circle',
-      'Use parameters and return values',
-      'Call the function with different inputs',
-      'Test with various radius values'
-    ],
-    code: `def calculate_area(radius):
-    """Calculate area of circle"""
-    import math
-    area = math.pi * radius * radius
-    return area
-
-# Test the function
-radius = 5
-area = calculate_area(radius)
-print(f"Area of circle with radius {radius} is {area:.2f}")`,
-    expectedResult: 'Area of circle with radius 5 is 78.54'
-  }
-];
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  FlaskConical, 
+  Zap, 
+  Microscope, 
+  Code,
+  Play,
+  RotateCcw,
+  Settings,
+  BookOpen,
+  Award,
+  ArrowLeft,
+  CheckCircle,
+  Star
+} from 'lucide-react';
 
 interface VirtualLabProps {
-  lab?: any;
-  onComplete?: (score: number) => void;
   onBack?: () => void;
 }
 
-export function VirtualLab({ lab, onComplete, onBack }: VirtualLabProps) {
-  const { t } = useTranslation();
-  const [selectedExperiment, setSelectedExperiment] = useState<Experiment | null>(null);
+interface Lab {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
+  duration: string;
+  completed: boolean;
+  xpReward: number;
+  steps: string[];
+}
+
+interface LabCategory {
+  id: string;
+  name: string;
+  icon: any;
+  color: string;
+  bgColor: string;
+  labs: Lab[];
+}
+
+export function VirtualLab({ onBack }: VirtualLabProps) {
   const [activeTab, setActiveTab] = useState('physics');
-  const [codeOutput, setCodeOutput] = useState<string>('');
-  const [userCode, setUserCode] = useState<string>('');
+  const [selectedLab, setSelectedLab] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [labProgress, setLabProgress] = useState<{ [key: string]: number }>({});
+  const { toast } = useToast();
 
-  const getSubjectIcon = (subject: string) => {
-    switch (subject) {
-      case 'physics': return <Calculator className="h-4 w-4" />;
-      case 'chemistry': return <Beaker className="h-4 w-4" />;
-      case 'biology': return <Microscope className="h-4 w-4" />;
-      case 'computer': return <Cpu className="h-4 w-4" />;
-      default: return <Lightbulb className="h-4 w-4" />;
+  const labCategories: LabCategory[] = [
+    {
+      id: 'physics',
+      name: 'Physics',
+      icon: Zap,
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-50 dark:bg-blue-950/20',
+      labs: [
+        {
+          id: 'pendulum',
+          title: 'Simple Pendulum',
+          description: 'Study oscillatory motion and calculate period',
+          difficulty: 'Beginner',
+          duration: '15 min',
+          completed: false,
+          xpReward: 50,
+          steps: [
+            'Set up the pendulum apparatus',
+            'Adjust the length to 1 meter',
+            'Release from 15° angle',
+            'Measure 10 complete oscillations',
+            'Calculate the period',
+            'Record your observations'
+          ]
+        },
+        {
+          id: 'optics',
+          title: 'Ray Optics',
+          description: 'Explore reflection and refraction',
+          difficulty: 'Intermediate',
+          duration: '20 min',
+          completed: false,
+          xpReward: 75,
+          steps: [
+            'Set up ray box and mirrors',
+            'Observe reflection patterns',
+            'Test with convex lens',
+            'Measure focal length',
+            'Document light paths'
+          ]
+        }
+      ]
+    },
+    {
+      id: 'chemistry',
+      name: 'Chemistry',
+      icon: FlaskConical,
+      color: 'text-green-500',
+      bgColor: 'bg-green-50 dark:bg-green-950/20',
+      labs: [
+        {
+          id: 'titration',
+          title: 'Acid-Base Titration',
+          description: 'Determine concentration through titration',
+          difficulty: 'Intermediate',
+          duration: '25 min',
+          completed: false,
+          xpReward: 100,
+          steps: [
+            'Prepare the titration setup',
+            'Fill burette with NaOH solution',
+            'Add indicator to acid solution',
+            'Begin titration slowly',
+            'Observe color change',
+            'Calculate concentration'
+          ]
+        },
+        {
+          id: 'reactions',
+          title: 'Chemical Reactions',
+          description: 'Visualize molecular interactions',
+          difficulty: 'Advanced',
+          duration: '30 min',
+          completed: false,
+          xpReward: 125,
+          steps: [
+            'Select reactant molecules',
+            'Adjust temperature settings',
+            'Initiate reaction simulation',
+            'Observe bond formations',
+            'Analyze energy changes'
+          ]
+        }
+      ]
+    },
+    {
+      id: 'biology',
+      name: 'Biology',
+      icon: Microscope,
+      color: 'text-purple-500',
+      bgColor: 'bg-purple-50 dark:bg-purple-950/20',
+      labs: [
+        {
+          id: 'cell',
+          title: 'Cell Structure',
+          description: 'Explore plant and animal cells',
+          difficulty: 'Beginner',
+          duration: '20 min',
+          completed: false,
+          xpReward: 60,
+          steps: [
+            'Prepare microscope slide',
+            'Focus on cell membrane',
+            'Identify organelles',
+            'Compare plant vs animal cells',
+            'Sketch your observations'
+          ]
+        },
+        {
+          id: 'genetics',
+          title: 'Genetics Lab',
+          description: 'Study inheritance patterns',
+          difficulty: 'Advanced',
+          duration: '35 min',
+          completed: false,
+          xpReward: 150,
+          steps: [
+            'Set up Punnett squares',
+            'Cross different traits',
+            'Analyze F1 generation',
+            'Predict F2 outcomes',
+            'Calculate probability ratios'
+          ]
+        }
+      ]
+    },
+    {
+      id: 'computer',
+      name: 'Computer Science',
+      icon: Code,
+      color: 'text-orange-500',
+      bgColor: 'bg-orange-50 dark:bg-orange-950/20',
+      labs: [
+        {
+          id: 'algorithms',
+          title: 'Sorting Algorithms',
+          description: 'Visualize different sorting techniques',
+          difficulty: 'Intermediate',
+          duration: '20 min',
+          completed: false,
+          xpReward: 80,
+          steps: [
+            'Choose array size and type',
+            'Select sorting algorithm',
+            'Start visualization',
+            'Observe comparison steps',
+            'Analyze time complexity'
+          ]
+        },
+        {
+          id: 'data-structures',
+          title: 'Data Structures',
+          description: 'Interactive trees and graphs',
+          difficulty: 'Advanced',
+          duration: '30 min',
+          completed: false,
+          xpReward: 120,
+          steps: [
+            'Build binary tree structure',
+            'Insert nodes interactively',
+            'Perform tree traversals',
+            'Balance the tree',
+            'Test search operations'
+          ]
+        }
+      ]
     }
-  };
+  ];
 
-  const getSubjectColor = (subject: string) => {
-    switch (subject) {
-      case 'physics': return 'hsl(var(--mathematics))';
-      case 'chemistry': return 'hsl(var(--science))';
-      case 'biology': return 'hsl(var(--engineering))';
-      case 'computer': return 'hsl(var(--technology))';
-      default: return 'hsl(var(--primary))';
-    }
-  };
-
-  const runCode = () => {
-    if (!selectedExperiment?.code) return;
+  const handleStepComplete = () => {
+    const lab = labCategories
+      .find(cat => cat.labs.some(l => l.id === selectedLab))
+      ?.labs.find(l => l.id === selectedLab);
     
-    try {
-      // Simulate code execution
-      if (selectedExperiment.subject === 'computer') {
-        setCodeOutput(selectedExperiment.expectedResult);
-      }
-    } catch (error) {
-      setCodeOutput('Error: Invalid code');
+    if (!lab) return;
+
+    const nextStep = currentStep + 1;
+    setCurrentStep(nextStep);
+    
+    const progress = Math.round((nextStep / lab.steps.length) * 100);
+    setLabProgress(prev => ({ ...prev, [selectedLab!]: progress }));
+
+    if (nextStep >= lab.steps.length) {
+      // Lab completed
+      toast({
+        title: "🎉 Lab Completed!",
+        description: `You earned ${lab.xpReward} XP!`,
+      });
+      
+      // Here you would update the backend with completion status
+      lab.completed = true;
+    } else {
+      toast({
+        title: "Step Completed!",
+        description: `Step ${nextStep} of ${lab.steps.length} completed.`,
+      });
     }
   };
 
-  const filteredExperiments = experiments.filter(exp => exp.subject === activeTab);
+  const resetLab = () => {
+    setCurrentStep(0);
+    if (selectedLab) {
+      setLabProgress(prev => ({ ...prev, [selectedLab]: 0 }));
+    }
+  };
 
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Lightbulb className="h-6 w-6 text-primary" />
-            Virtual Labs - Interactive Learning
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="physics" className="flex items-center gap-2">
-                <Calculator className="h-4 w-4" />
-                Physics
-              </TabsTrigger>
-              <TabsTrigger value="chemistry" className="flex items-center gap-2">
-                <Beaker className="h-4 w-4" />
-                Chemistry
-              </TabsTrigger>
-              <TabsTrigger value="biology" className="flex items-center gap-2">
-                <Microscope className="h-4 w-4" />
-                Biology
-              </TabsTrigger>
-              <TabsTrigger value="computer" className="flex items-center gap-2">
-                <Cpu className="h-4 w-4" />
-                Computer Science
-              </TabsTrigger>
-            </TabsList>
+  const InteractiveSimulation = ({ labId }: { labId: string }) => {
+    const [isRunning, setIsRunning] = useState(false);
+    const [measurements, setMeasurements] = useState<string[]>([]);
 
-            <TabsContent value={activeTab} className="mt-6">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredExperiments.map((experiment) => (
-                  <Card 
-                    key={experiment.id} 
-                    className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => setSelectedExperiment(experiment)}
-                  >
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {getSubjectIcon(experiment.subject)}
-                          <h3 className="font-medium">{experiment.title}</h3>
-                        </div>
-                        <Badge variant="outline">{experiment.grade}</Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        {experiment.description}
-                      </p>
-                      <Button size="sm" className="w-full">
-                        <PlayCircle className="h-4 w-4 mr-2" />
-                        Start Experiment
-                      </Button>
-                    </CardContent>
-                  </Card>
+    const runSimulation = () => {
+      setIsRunning(true);
+      
+      // Simulate lab experiment
+      setTimeout(() => {
+        const measurement = Math.random() * 10 + 5; // Random measurement
+        setMeasurements(prev => [...prev, `${measurement.toFixed(2)} units`]);
+        setIsRunning(false);
+        
+        toast({
+          title: "Measurement Recorded",
+          description: `Value: ${measurement.toFixed(2)} units`,
+        });
+      }, 2000);
+    };
+
+    return (
+      <div className="space-y-4">
+        <div className="bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg p-6 border-2 border-dashed border-primary/20">
+          <div className="text-center space-y-4">
+            <div className="w-24 h-24 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+              <FlaskConical className="h-12 w-12 text-primary" />
+            </div>
+            <h3 className="text-lg font-semibold">Interactive Lab Environment</h3>
+            <p className="text-muted-foreground">
+              Click 'Run Simulation' to begin the experiment
+            </p>
+            <Button 
+              onClick={runSimulation} 
+              disabled={isRunning}
+              className="w-full"
+            >
+              {isRunning ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Running...
+                </>
+              ) : (
+                <>
+                  <Play className="h-4 w-4 mr-2" />
+                  Run Simulation
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {measurements.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Measurements</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {measurements.map((measurement, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    <Badge variant="outline">{index + 1}</Badge>
+                    <span>{measurement}</span>
+                  </div>
                 ))}
               </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  };
 
-      {selectedExperiment && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {getSubjectIcon(selectedExperiment.subject)}
-              {selectedExperiment.title}
-              <Badge variant="outline">{selectedExperiment.grade}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <p className="text-muted-foreground">{selectedExperiment.description}</p>
+  if (selectedLab) {
+    const category = labCategories.find(cat => cat.labs.some(lab => lab.id === selectedLab));
+    const lab = category?.labs.find(lab => lab.id === selectedLab);
+    
+    if (!lab) return null;
 
-            <div className="grid gap-6 md:grid-cols-2">
-              <div>
-                <h4 className="font-medium mb-3">Materials Required:</h4>
-                <ul className="space-y-1">
-                  {selectedExperiment.materials.map((material, index) => (
-                    <li key={index} className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-primary" />
-                      {material}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="font-medium mb-3">Procedure:</h4>
-                <ol className="space-y-2">
-                  {selectedExperiment.steps.map((step, index) => (
-                    <li key={index} className="flex gap-3">
-                      <span className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium">
-                        {index + 1}
-                      </span>
-                      <span className="text-sm">{step}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            </div>
-
-            {selectedExperiment.code && (
-              <div className="space-y-4">
-                <h4 className="font-medium">Code:</h4>
-                <div className="bg-muted rounded-lg p-4">
-                  <pre className="text-sm overflow-x-auto">
-                    <code>{selectedExperiment.code}</code>
-                  </pre>
-                </div>
-                <div className="flex gap-2">
-                  <Button onClick={runCode}>
-                    <PlayCircle className="h-4 w-4 mr-2" />
-                    Run Code
-                  </Button>
-                </div>
-                {codeOutput && (
-                  <div className="bg-muted rounded-lg p-4">
-                    <h5 className="font-medium mb-2">Output:</h5>
-                    <pre className="text-sm">{codeOutput}</pre>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="bg-primary/5 rounded-lg p-4">
-              <h4 className="font-medium mb-2">Expected Result:</h4>
-              <p className="text-sm">{selectedExperiment.expectedResult}</p>
-            </div>
-
+    const progress = labProgress[selectedLab] || 0;
+    
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex items-center justify-between">
+          <div>
             <Button 
-              variant="outline" 
-              onClick={() => setSelectedExperiment(null)}
+              variant="ghost" 
+              onClick={() => setSelectedLab(null)}
+              className="mb-4 hover:bg-primary/10"
             >
-              Back to Experiments
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Labs
             </Button>
-          </CardContent>
-        </Card>
-      )}
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              {lab.title}
+            </h1>
+            <p className="text-muted-foreground mt-2">{lab.description}</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={resetLab}>
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Reset
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <Card className="h-full">
+              <CardContent className="p-6">
+                <InteractiveSimulation labId={selectedLab} />
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5" />
+                  Lab Steps
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {lab.steps.map((step, index) => (
+                    <div 
+                      key={index}
+                      className={`flex items-start gap-3 p-3 rounded-lg transition-colors ${
+                        index < currentStep 
+                          ? 'bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800' 
+                          : index === currentStep
+                          ? 'bg-primary/5 border border-primary/20'
+                          : 'bg-muted/50'
+                      }`}
+                    >
+                      <div className={`mt-0.5 ${
+                        index < currentStep 
+                          ? 'text-green-500' 
+                          : index === currentStep
+                          ? 'text-primary'
+                          : 'text-muted-foreground'
+                      }`}>
+                        {index < currentStep ? (
+                          <CheckCircle className="h-5 w-5" />
+                        ) : (
+                          <div className="h-5 w-5 rounded-full border-2 border-current flex items-center justify-center text-xs font-bold">
+                            {index + 1}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className={`text-sm ${
+                          index < currentStep ? 'line-through text-muted-foreground' : ''
+                        }`}>
+                          {step}
+                        </p>
+                        {index === currentStep && (
+                          <Button 
+                            size="sm" 
+                            className="mt-2"
+                            onClick={handleStepComplete}
+                          >
+                            Complete Step
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="h-5 w-5" />
+                  Progress
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Completion</span>
+                      <span>{progress}%</span>
+                    </div>
+                    <Progress value={progress} className="h-3" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                    <div>
+                      <div className="text-2xl font-bold text-primary">{currentStep}</div>
+                      <div className="text-xs text-muted-foreground">Steps Done</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-accent flex items-center justify-center gap-1">
+                        {Math.round((progress / 100) * lab.xpReward)}
+                        <Star className="h-4 w-4" />
+                      </div>
+                      <div className="text-xs text-muted-foreground">XP Earned</div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div className="text-center space-y-2">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+          Virtual Labs
+        </h1>
+        <p className="text-muted-foreground text-lg">
+          Hands-on experiments in immersive virtual environments
+        </p>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4 h-12">
+          {labCategories.map((category) => {
+            const Icon = category.icon;
+            return (
+              <TabsTrigger 
+                key={category.id} 
+                value={category.id} 
+                className="flex items-center gap-2 data-[state=active]:bg-primary/10"
+              >
+                <Icon className={`h-4 w-4 ${category.color}`} />
+                <span className="hidden sm:inline">{category.name}</span>
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+
+        {labCategories.map((category) => (
+          <TabsContent key={category.id} value={category.id} className="space-y-4">
+            <div className="grid gap-6 md:grid-cols-2">
+              {category.labs.map((lab) => (
+                <Card 
+                  key={lab.id} 
+                  className="cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200 border-0 shadow-md"
+                  onClick={() => setSelectedLab(lab.id)}
+                >
+                  <CardHeader className={category.bgColor}>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-3">
+                        <div className={`p-2 rounded-lg ${category.bgColor} border`}>
+                          <category.icon className={`h-5 w-5 ${category.color}`} />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">{lab.title}</CardTitle>
+                          <p className="text-muted-foreground text-sm mt-1">
+                            {lab.description}
+                          </p>
+                        </div>
+                      </div>
+                      {lab.completed && (
+                        <Badge className="bg-green-500 hover:bg-green-600">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Completed
+                        </Badge>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-2">
+                        <Badge 
+                          variant="outline" 
+                          className={
+                            lab.difficulty === 'Beginner' ? 'border-green-400 text-green-600' :
+                            lab.difficulty === 'Intermediate' ? 'border-yellow-400 text-yellow-600' :
+                            'border-red-400 text-red-600'
+                          }
+                        >
+                          {lab.difficulty}
+                        </Badge>
+                        <Badge variant="outline">{lab.duration}</Badge>
+                        <Badge variant="outline" className="text-accent">
+                          +{lab.xpReward} XP
+                        </Badge>
+                      </div>
+                      <Button size="sm">
+                        <Play className="h-4 w-4 mr-2" />
+                        Start Lab
+                      </Button>
+                    </div>
+                    
+                    {labProgress[lab.id] && labProgress[lab.id] > 0 && (
+                      <div className="mt-4">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span>Progress</span>
+                          <span>{labProgress[lab.id]}%</span>
+                        </div>
+                        <Progress value={labProgress[lab.id]} className="h-2" />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   );
 }

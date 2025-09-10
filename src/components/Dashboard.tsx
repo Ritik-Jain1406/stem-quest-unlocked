@@ -36,18 +36,6 @@ export function Dashboard({ quests, userProgress, onCompleteQuest, onCompleteLab
   if (selectedLab) {
     return (
       <VirtualLab
-        lab={selectedLab}
-        onComplete={async (score) => {
-          if (selectedQuest) {
-            await onCompleteLab(selectedLab.id, selectedQuest.id, score);
-          }
-          setSelectedLab(null);
-          setSelectedQuest(null);
-          toast({
-            title: "Lab Completed!",
-            description: `Great job! You scored ${score || 0} points.`,
-          });
-        }}
         onBack={() => setSelectedLab(null)}
       />
     );
